@@ -27,6 +27,12 @@ type PeerObservation struct {
 	Peer    Server
 }
 
+// PeerLiveness is sent to observers when peers doesn't respond to heartbeats
+type PeerLiveness struct {
+	ID        ServerID
+	Heartbeat bool
+}
+
 // nextObserverId is used to provide a unique ID for each observer to aid in
 // deregistration.
 var nextObserverID uint64

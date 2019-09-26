@@ -375,6 +375,7 @@ func (r *Raft) heartbeat(s *followerReplication, stopCh chan struct{}) {
 			return
 		}
 
+		prevFailures := failures
 		start := time.Now()
 		if err := r.trans.AppendEntries(s.peer.ID, s.peer.Address, &req, &resp); err != nil {
 			r.logger.Error("failed to heartbeat to", "peer", s.peer.Address, "error", err)
@@ -388,6 +389,9 @@ func (r *Raft) heartbeat(s *followerReplication, stopCh chan struct{}) {
 			failures = 0
 			metrics.MeasureSince([]string{"raft", "replication", "heartbeat", string(s.peer.ID)}, start)
 			s.notifyAll(resp.Success)
+		}
+		if prevFailures != failures && s.peer.Suffrage == Voter && (prevFailures == 0 || failures == 0) {
+			r.observe(PeerLiveness{ID: s.peer.ID, Heartbeat: (failures == 0)})
 		}
 	}
 }
